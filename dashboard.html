@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Company Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar placeholder -->
+        <div id="sidebar-container"></div>
+        
+        <main class="dashboard-content">
+            <!-- Navbar placeholder -->
+            <div id="navbar-container"></div>
+            
+            <h1>Dashboard</h1>
+            <div id="dashboard-cards" class="cards-grid">
+                <!-- Cards will be injected by JS -->
+            </div>
+            
+            <section id="recent-activity">
+                <h2>Recent Activity</h2>
+                <div id="activity-feed"></div>
+            </section>
+        </main>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
