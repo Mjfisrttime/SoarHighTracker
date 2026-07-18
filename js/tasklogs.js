@@ -63,7 +63,7 @@ const TaskLogs = {
         const title = document.getElementById('task-title').value.trim();
         const date = document.getElementById('task-date').value;
         const groupId = document.getElementById('task-group').value || null;
-        const hours = parseFloat(document.getElementById('task-hours').value);
+        const hours = document.getElementById('task-hours').value.trim();
         const description = document.getElementById('task-desc').value.trim();
         const btn = document.getElementById('btn-submit-task');
 
@@ -149,7 +149,7 @@ TaskLogs.loadMyTasks = async function() {
             html += `
                 <div class="task-card">
                     <h4>${t.title} ${groupBadge}</h4>
-                    <small>${Utils.formatDate(t.date)} - ${t.hours_spent} hours</small>
+                    <small>${Utils.formatDate(t.date)} - Time Spent: ${t.hours_spent}</small>
                     <p>${t.task_description}</p>
                 </div>
             `;
@@ -249,7 +249,7 @@ TaskLogs.applyFilters = function() {
                 <td>${Utils.formatDate(t.date)}</td>
                 <td>${userName}</td>
                 <td>${groupName}</td>
-                <td><strong>${t.title}</strong> (${t.hours_spent} hrs)</td>
+                <td><strong>${t.title}</strong> (Time: ${t.hours_spent})</td>
                 <td>${t.task_description}</td>
             </tr>
         `;
