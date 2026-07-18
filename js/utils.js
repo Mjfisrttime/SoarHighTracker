@@ -8,6 +8,12 @@ const Utils = {
     },
 
     async loadComponents(role, userName) {
+        // Initialize Theme globally
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
+
         try {
             // Load Sidebar
             const sidebarRes = await fetch('components/sidebar.html');
@@ -46,6 +52,7 @@ const Utils = {
                 <li><a href="attendance.html">Attendance</a></li>
                 <li><a href="task_logs.html">Task Logs</a></li>
                 <li><a href="reports.html">Reports</a></li>
+                <li><a href="settings.html">Settings</a></li>
                 <li><a href="profile.html">Profile</a></li>
             `;
         } else {
@@ -54,6 +61,7 @@ const Utils = {
                 <li><a href="groups.html">My Groups</a></li>
                 <li><a href="attendance.html">Attendance</a></li>
                 <li><a href="task_logs.html">Task Logs</a></li>
+                <li><a href="settings.html">Settings</a></li>
                 <li><a href="profile.html">Profile</a></li>
             `;
         }
