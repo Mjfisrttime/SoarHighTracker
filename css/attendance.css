@@ -1,0 +1,51 @@
+/* Attendance Page Specific Styles */
+
+.flex-1 {
+    flex: 1;
+}
+
+.flex-end {
+    display: flex;
+    align-items: flex-end;
+}
+
+.radio-group {
+    display: flex;
+    gap: 15px;
+}
+
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Member View Badges */
+.badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-present {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.badge-absent {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-late {
+    background-color: #fef9c3;
+    color: #854d0e;
+}
+
+/* Summary Card specific colors */
+.stat-present h3 { color: #166534; }
+.stat-absent h3 { color: #991b1b; }
+.stat-late h3 { color: #854d0e; }
