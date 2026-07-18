@@ -41,7 +41,7 @@ const Utils = {
         if (role === 'Admin') {
             html += `
                 <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="#">Groups</a></li>
+                <li><a href="groups.html">Groups</a></li>
                 <li><a href="#">Members</a></li>
                 <li><a href="#">Attendance</a></li>
                 <li><a href="#">Task Logs</a></li>

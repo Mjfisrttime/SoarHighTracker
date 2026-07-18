@@ -25,7 +25,7 @@ const Auth = {
 
                 if (dbError) {
                     console.error("Database insert error:", dbError);
-                    throw new Error("Account created but failed to save profile details.");
+                    throw new Error("DB Error: " + dbError.message + " (Code: " + dbError.code + ")");
                 }
 
                 Utils.showToast("Registration successful!", "success");

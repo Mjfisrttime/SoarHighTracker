@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groups - Company Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/groups.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar placeholder -->
+        <div id="sidebar-container"></div>
+        
+        <main class="dashboard-content">
+            <!-- Navbar placeholder -->
+            <div id="navbar-container"></div>
+            
+            <div class="page-header">
+                <h1>Groups</h1>
+                <button id="btn-create-group" class="btn-primary">Create New Group</button>
+            </div>
+            
+            <div class="controls-bar">
+                <input type="text" id="search-groups" placeholder="Search groups by name...">
+            </div>
+            
+            <div id="groups-list" class="cards-grid">
+                <!-- Group cards will be injected here -->
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal for Create/Edit Group -->
+    <div id="group-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" id="modal-close">&times;</span>
+            <h2 id="modal-title">Create Group</h2>
+            <form id="group-form">
+                <input type="hidden" id="group-id">
+                
+                <div class="form-group">
+                    <label for="group-name">Group Name *</label>
+                    <input type="text" id="group-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="group-desc">Description</label>
+                    <textarea id="group-desc" rows="3"></textarea>
+                </div>
+                
+                <button type="submit" class="btn-primary" id="btn-save-group">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/groups.js"></script>
+</body>
+</html>
