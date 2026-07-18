@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Company Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar placeholder -->
+        <div id="sidebar-container"></div>
+        
+        <main class="dashboard-content">
+            <!-- Navbar placeholder -->
+            <div id="navbar-container"></div>
+            
+            <div class="page-header">
+                <h1>Reports</h1>
+            </div>
+            
+            <div class="controls-bar" style="display: flex; gap: 20px; align-items: flex-end;">
+                <div class="form-group flex-1">
+                    <label>Report Type:</label>
+                    <select id="report-type">
+                        <option value="attendance">Attendance Grid</option>
+                        <option value="tasks">Task Logs List</option>
+                    </select>
+                </div>
+                <div class="form-group flex-1">
+                    <label>Group (Required):</label>
+                    <select id="report-group">
+                        <option value="">Select a Group...</option>
+                    </select>
+                </div>
+                <div class="form-group flex-1">
+                    <label>Date (Optional):</label>
+                    <input type="month" id="report-month">
+                </div>
+                <div class="form-group">
+                    <button class="btn-primary" id="btn-generate">Generate Report</button>
+                </div>
+            </div>
+
+            <div id="report-container" class="table-container">
+                <div class="card" style="text-align: center; padding: 40px; color: var(--text-light);">
+                    <p>Select a report type and group, then click Generate.</p>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/reports.js"></script>
+</body>
+</html>
