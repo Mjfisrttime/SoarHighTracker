@@ -314,3 +314,49 @@ input:focus, select:focus, textarea:focus {
 .data-table tbody tr:last-child td {
     border-bottom: none;
 }
+
+/* Activity Feed */
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--card-bg);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 16px;
+    flex-shrink: 0;
+}
+
+.bg-blue { background-color: #3b82f6; }
+.bg-green { background-color: #10b981; }
+.bg-purple { background-color: #8b5cf6; }
+.bg-orange { background-color: #f59e0b; }
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-content p {
+    margin: 0 0 4px 0;
+    line-height: 1.4;
+    color: var(--text-color);
+}
+
+.activity-content small {
+    color: var(--text-light);
+    font-size: 0.8rem;
+}
