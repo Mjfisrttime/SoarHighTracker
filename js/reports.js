@@ -75,10 +75,11 @@ const Reports = {
         if (memError) throw memError;
 
         // 2. Get all attendance records for the group
+        const userIds = members.map(m => m.users.id);
         let query = supabaseClient
             .from('attendance')
             .select('user_id, date, status')
-            .eq('group_id', groupId)
+            .in('user_id', userIds)
             .order('date', { ascending: true });
         
         if (month) {

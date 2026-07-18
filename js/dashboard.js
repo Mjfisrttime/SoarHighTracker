@@ -89,13 +89,13 @@ const Dashboard = {
             // 2. Fetch Attendance
             const { data: att } = await supabaseClient
                 .from('attendance')
-                .select('status, date, users(name), groups(name)')
+                .select('status, date, users(name)')
                 .order('date', { ascending: false })
                 .limit(10);
             if (att) {
                 att.forEach(a => activities.push({
                     type: 'Attendance',
-                    text: `<strong>${a.users?.name || 'Unknown'}</strong> was marked <em>${a.status}</em> in ${a.groups?.name || 'Group'}`,
+                    text: `<strong>${a.users?.name || 'Unknown'}</strong> was marked <em>${a.status}</em>`,
                     // Note: 'date' column in attendance is a date string. We'll approximate time to start of day, or use now if it's today.
                     // For a more accurate feed, a created_at column would be better, but we'll use date.
                     date: new Date(a.date + 'T12:00:00Z')
