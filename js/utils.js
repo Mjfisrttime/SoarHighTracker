@@ -46,7 +46,7 @@ const Utils = {
                 <li><a href="attendance.html">Attendance</a></li>
                 <li><a href="task_logs.html">Task Logs</a></li>
                 <li><a href="reports.html">Reports</a></li>
-                <li><a href="#">Profile</a></li>
+                <li><a href="profile.html">Profile</a></li>
             `;
         } else {
             html += `
@@ -54,7 +54,7 @@ const Utils = {
                 <li><a href="groups.html">My Groups</a></li>
                 <li><a href="attendance.html">Attendance</a></li>
                 <li><a href="task_logs.html">Task Logs</a></li>
-                <li><a href="#">Profile</a></li>
+                <li><a href="profile.html">Profile</a></li>
             `;
         }
         sidebarLinks.innerHTML = html;
