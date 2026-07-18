@@ -63,6 +63,7 @@ const TaskLogs = {
         const title = document.getElementById('task-title').value.trim();
         const date = document.getElementById('task-date').value;
         const groupId = document.getElementById('task-group').value || null;
+        const hours = parseFloat(document.getElementById('task-hours').value);
         const description = document.getElementById('task-desc').value.trim();
         const btn = document.getElementById('btn-submit-task');
 
@@ -77,7 +78,8 @@ const TaskLogs = {
                     title: title,
                     date: date,
                     group_id: groupId,
-                    task_description: description
+                    hours_spent: hours,
+                    task_description: description || 'No description provided.'
                 }]);
 
             if (error) throw error;
@@ -128,7 +130,7 @@ TaskLogs.loadMyTasks = async function() {
         const { data, error } = await supabaseClient
             .from('task_logs')
             .select(`
-                title, date, task_description, logged_at,
+                title, date, task_description, logged_at, hours_spent,
                 groups(name)
             `)
             .eq('user_id', this.currentUser.id)
@@ -147,8 +149,8 @@ TaskLogs.loadMyTasks = async function() {
             html += `
                 <div class="task-card">
                     <h4>${t.title} ${groupBadge}</h4>
-                    <small>${Utils.formatDate(t.date)}</small>
-                    <p>${t.task_description || '<em>No description provided.</em>'}</p>
+                    <small>${Utils.formatDate(t.date)} - ${t.hours_spent} hours</small>
+                    <p>${t.task_description}</p>
                 </div>
             `;
         });
@@ -203,7 +205,7 @@ TaskLogs.loadAllTasks = async function() {
         const { data, error } = await supabaseClient
             .from('task_logs')
             .select(`
-                title, date, task_description, logged_at, group_id,
+                title, date, task_description, logged_at, group_id, hours_spent,
                 users(name),
                 groups(name)
             `)
@@ -247,8 +249,8 @@ TaskLogs.applyFilters = function() {
                 <td>${Utils.formatDate(t.date)}</td>
                 <td>${userName}</td>
                 <td>${groupName}</td>
-                <td><strong>${t.title}</strong></td>
-                <td>${t.task_description || ''}</td>
+                <td><strong>${t.title}</strong> (${t.hours_spent} hrs)</td>
+                <td>${t.task_description}</td>
             </tr>
         `;
     });

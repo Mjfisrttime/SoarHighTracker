@@ -11,13 +11,14 @@ const Groups = {
 
         await Utils.loadComponents(this.currentUser.role, this.currentUser.name);
 
-        if (this.currentUser.role !== 'Admin') {
-            document.querySelector('.dashboard-content').innerHTML = `<h2>Access Denied</h2><p>Only Admins can manage groups.</p>`;
-            return;
+        if (this.currentUser.role === 'Admin') {
+            document.getElementById('admin-groups-view').classList.remove('hidden');
+            this.bindEvents();
+            await this.loadGroups();
+        } else {
+            document.getElementById('member-groups-view').classList.remove('hidden');
+            await this.loadMemberGroups();
         }
-
-        this.bindEvents();
-        await this.loadGroups();
     },
 
     bindEvents() {
@@ -175,6 +176,50 @@ const Groups = {
         } catch (error) {
             console.error(error);
             Utils.showToast(error.message, "error");
+        }
+    },
+
+    // ==========================================
+    // MEMBER LOGIC
+    // ==========================================
+    async loadMemberGroups() {
+        const list = document.getElementById('my-groups-list');
+        list.innerHTML = '<p>Loading your groups...</p>';
+
+        try {
+            const { data, error } = await supabaseClient
+                .from('group_members')
+                .select(`
+                    groups (id, name, description, created_at, users!groups_created_by_fkey(name))
+                `)
+                .eq('user_id', this.currentUser.id);
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                list.innerHTML = '<p>You are not assigned to any groups yet.</p>';
+                return;
+            }
+
+            let html = '';
+            data.forEach(gm => {
+                const g = gm.groups;
+                if (!g) return;
+                
+                const creator = g.users?.name || 'Unknown';
+                html += `
+                    <div class="card">
+                        <h3>${g.name}</h3>
+                        <p>${g.description || 'No description provided.'}</p>
+                        <hr>
+                        <p><small>Created by: ${creator} on ${Utils.formatDate(g.created_at)}</small></p>
+                    </div>
+                `;
+            });
+            list.innerHTML = html || '<p>No valid groups found.</p>';
+        } catch (error) {
+            console.error(error);
+            list.innerHTML = '<p>Error loading your groups.</p>';
         }
     }
 };

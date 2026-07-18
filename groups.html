@@ -16,17 +16,30 @@
             <!-- Navbar placeholder -->
             <div id="navbar-container"></div>
             
-            <div class="page-header">
-                <h1>Groups</h1>
-                <button id="btn-create-group" class="btn-primary">Create New Group</button>
+            <!-- ADMIN VIEW -->
+            <div id="admin-groups-view" class="hidden">
+                <div class="page-header">
+                    <h1>Manage Groups</h1>
+                    <button id="btn-create-group" class="btn-primary">Create New Group</button>
+                </div>
+                
+                <div class="controls-bar">
+                    <input type="text" id="search-groups" placeholder="Search groups by name...">
+                </div>
+                
+                <div id="groups-list" class="cards-grid">
+                    <!-- Group cards will be injected here -->
+                </div>
             </div>
-            
-            <div class="controls-bar">
-                <input type="text" id="search-groups" placeholder="Search groups by name...">
-            </div>
-            
-            <div id="groups-list" class="cards-grid">
-                <!-- Group cards will be injected here -->
+
+            <!-- MEMBER VIEW -->
+            <div id="member-groups-view" class="hidden">
+                <div class="page-header">
+                    <h1>My Groups</h1>
+                </div>
+                <div id="my-groups-list" class="cards-grid">
+                    <!-- Member groups injected here -->
+                </div>
             </div>
         </main>
     </div>

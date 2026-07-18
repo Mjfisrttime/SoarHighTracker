@@ -51,7 +51,7 @@ const Utils = {
         } else {
             html += `
                 <li><a href="dashboard.html">Dashboard</a></li>
-                <li><a href="#">My Groups</a></li>
+                <li><a href="groups.html">My Groups</a></li>
                 <li><a href="attendance.html">Attendance</a></li>
                 <li><a href="task_logs.html">Task Logs</a></li>
                 <li><a href="#">Profile</a></li>
