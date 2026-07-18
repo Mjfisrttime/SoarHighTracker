@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Members - Company Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/members.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar placeholder -->
+        <div id="sidebar-container"></div>
+        
+        <main class="dashboard-content">
+            <!-- Navbar placeholder -->
+            <div id="navbar-container"></div>
+            
+            <div class="page-header">
+                <h1>Members</h1>
+            </div>
+            
+            <div class="controls-bar">
+                <input type="text" id="search-members" placeholder="Search members by name or email...">
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Joined Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="members-list">
+                        <!-- Members will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal for Managing Groups -->
+    <div id="assign-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" id="modal-close">&times;</span>
+            <h2 id="modal-title">Manage Groups for <span id="assign-user-name"></span></h2>
+            <input type="hidden" id="assign-user-id">
+            
+            <div class="form-group row-flex">
+                <select id="group-select">
+                    <option value="">Select a group...</option>
+                    <!-- Available groups injected here -->
+                </select>
+                <button type="button" class="btn-primary" id="btn-add-to-group">Add</button>
+            </div>
+            
+            <h3>Current Groups</h3>
+            <ul id="current-groups-list" class="managed-list">
+                <!-- User's current groups injected here -->
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/members.js"></script>
+</body>
+</html>
