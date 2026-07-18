@@ -1,0 +1,74 @@
+/* Task Logs Page Specific Styles */
+
+.row-layout {
+    display: flex;
+    gap: 30px;
+}
+
+.flex-1 {
+    flex: 1;
+}
+
+.flex-end {
+    display: flex;
+    align-items: flex-end;
+}
+
+.form-container {
+    padding: 25px;
+}
+
+.feed-container {
+    padding: 25px;
+    background-color: transparent;
+    box-shadow: none;
+    border: none;
+}
+
+.feed-container h2 {
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.task-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.task-card {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-left: 4px solid #3b82f6;
+}
+
+.task-card h4 {
+    margin: 0 0 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.task-card p {
+    margin: 10px 0 0 0;
+    color: #4b5563;
+    font-size: 14px;
+}
+
+.badge-group {
+    background-color: #f1f5f9;
+    color: #475569;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.empty-state {
+    color: #64748b;
+    font-style: italic;
+    text-align: center;
+    padding: 20px 0;
+}

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Logs - Company Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/tasklogs.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <!-- Sidebar placeholder -->
+        <div id="sidebar-container"></div>
+        
+        <main class="dashboard-content">
+            <!-- Navbar placeholder -->
+            <div id="navbar-container"></div>
+            
+            <div class="page-header">
+                <h1>Task Logs</h1>
+            </div>
+            
+            <!-- ADMIN VIEW -->
+            <div id="admin-task-view" class="hidden">
+                <div class="controls-bar row-flex">
+                    <div class="form-group flex-1">
+                        <label>Filter by Group:</label>
+                        <select id="admin-filter-group">
+                            <option value="">All Groups</option>
+                        </select>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label>Filter by Date:</label>
+                        <input type="date" id="admin-filter-date">
+                    </div>
+                    <div class="form-group flex-1 flex-end">
+                        <button class="btn-secondary" id="btn-clear-filters">Clear Filters</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Member</th>
+                                <th>Group</th>
+                                <th>Task Title</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-tasks-list">
+                            <tr>
+                                <td colspan="5">Loading tasks...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- MEMBER VIEW -->
+            <div id="member-task-view" class="hidden row-layout">
+                
+                <!-- Submission Form (Left Side) -->
+                <div class="card form-container flex-1">
+                    <h2>Submit New Task</h2>
+                    <form id="task-form">
+                        <div class="form-group">
+                            <label for="task-title">Title *</label>
+                            <input type="text" id="task-title" required minlength="3">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="task-date">Completion Date *</label>
+                            <input type="date" id="task-date" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="task-group">Group (Optional)</label>
+                            <select id="task-group">
+                                <option value="">Select a group...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="task-desc">Description</label>
+                            <textarea id="task-desc" rows="4"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary" id="btn-submit-task">Submit Task</button>
+                    </form>
+                </div>
+
+                <!-- My Recent Tasks (Right Side) -->
+                <div class="card feed-container flex-1">
+                    <h2>My Recent Tasks</h2>
+                    <div id="member-tasks-list" class="task-feed">
+                        <p>Loading tasks...</p>
+                    </div>
+                </div>
+
+            </div>
+            
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/tasklogs.js"></script>
+</body>
+</html>

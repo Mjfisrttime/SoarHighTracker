@@ -44,7 +44,7 @@ const Utils = {
                 <li><a href="groups.html">Groups</a></li>
                 <li><a href="members.html">Members</a></li>
                 <li><a href="attendance.html">Attendance</a></li>
-                <li><a href="#">Task Logs</a></li>
+                <li><a href="task_logs.html">Task Logs</a></li>
                 <li><a href="#">Reports</a></li>
                 <li><a href="#">Profile</a></li>
             `;
@@ -53,7 +53,7 @@ const Utils = {
                 <li><a href="dashboard.html">Dashboard</a></li>
                 <li><a href="#">My Groups</a></li>
                 <li><a href="attendance.html">Attendance</a></li>
-                <li><a href="#">Task Logs</a></li>
+                <li><a href="task_logs.html">Task Logs</a></li>
                 <li><a href="#">Profile</a></li>
             `;
         }
