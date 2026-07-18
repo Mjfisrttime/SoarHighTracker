@@ -22,5 +22,28 @@
     <script src="js/supabase.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            Auth.checkSession(false); // Redirect if already logged in
+
+            const loginForm = document.getElementById('login-form');
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const btn = loginForm.querySelector('button');
+
+                btn.textContent = 'Logging in...';
+                btn.disabled = true;
+
+                try {
+                    await Auth.login(email, password);
+                } catch (error) {
+                    btn.textContent = 'Log In';
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
 </body>
 </html>
