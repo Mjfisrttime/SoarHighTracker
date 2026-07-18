@@ -39,11 +39,13 @@
             // Protect this route
             const session = await Auth.checkSession(true);
             if (session) {
-                // Populate user name if we want to dynamically show it
                 const user = await Auth.getCurrentUser();
                 if (user) {
-                    console.log("Logged in user:", user);
-                    // This will be implemented fully in Phase 3 Dashboard
+                    // 1. Load Navbar and Sidebar dynamically
+                    await Utils.loadComponents(user.role, user.name);
+
+                    // 2. Initialize the dashboard data
+                    await Dashboard.init(user);
                 }
             }
         });

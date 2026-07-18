@@ -3,7 +3,7 @@ const Auth = {
     async register(name, email, password) {
         try {
             // 1. Sign up the user in Supabase Auth
-            const { data, error } = await supabase.auth.signUp({
+            const { data, error } = await supabaseClient.auth.signUp({
                 email,
                 password,
             });
@@ -12,7 +12,7 @@ const Auth = {
 
             if (data.user) {
                 // 2. Insert user into the 'users' table
-                const { error: dbError } = await supabase
+                const { error: dbError } = await supabaseClient
                     .from('users')
                     .insert([
                         {
@@ -28,8 +28,8 @@ const Auth = {
                     throw new Error("Account created but failed to save profile details.");
                 }
 
-                Utils.showToast("Registration successful! You can now log in.", "success");
-                window.location.href = 'login.html';
+                Utils.showToast("Registration successful!", "success");
+                window.location.href = 'dashboard.html';
             }
         } catch (error) {
             console.error("Registration error:", error.message);
@@ -40,7 +40,7 @@ const Auth = {
 
     async login(email, password) {
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
                 email,
                 password
             });
@@ -58,7 +58,7 @@ const Auth = {
 
     async logout() {
         try {
-            const { error } = await supabase.auth.signOut();
+            const { error } = await supabaseClient.auth.signOut();
             if (error) throw error;
             
             window.location.href = 'login.html';
@@ -69,7 +69,7 @@ const Auth = {
     },
 
     async checkSession(isProtected = false) {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
         
         if (isProtected && !session) {
             // Protected route, no session -> redirect to login
@@ -85,11 +85,11 @@ const Auth = {
     },
 
     async getCurrentUser() {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return null;
 
         // Fetch additional profile data from 'users' table
-        const { data: profile } = await supabase
+        const { data: profile } = await supabaseClient
             .from('users')
             .select('*')
             .eq('id', user.id)
