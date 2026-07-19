@@ -36,9 +36,17 @@ Display tasks submitted by the logged-in member.
 # 3. Admin Task View
 
 Admin can view all tasks submitted by all members.
-Filters:
+
+## Filters
 - By Group
 - By Date
+- **By Member** [NEW]
+
+## Summary Widgets [NEW]
+Displays dynamic statistics based on current filters:
+- **Total Tasks** (count of filtered rows)
+- **Total Hours** (sum of parsed hours from filtered rows)
+- **Active Members** (count of unique users in filtered rows)
 
 ---
 
@@ -123,8 +131,9 @@ Layout: Form (1/3 width, left side) + Task feed (2/3 width, right side)
 - Completion date cannot be in the future.
 - Member sees their own tasks.
 - Admin can view tasks from all members.
-- Admin can filter tasks by group and date.
-- `hours_spent` is displayed for each task.
+- Admin can filter tasks by **Group**, **Date**, and **Member**.
+- **Summary Widgets** dynamically calculate Total Tasks, Total Hours, and Active Members based on filters.
+- `hours_spent` is displayed for each task and parsed correctly for the total summary.
 
 ---
 
@@ -133,7 +142,8 @@ Layout: Form (1/3 width, left side) + Task feed (2/3 width, right side)
 - [ ] Task submission form created and functional
 - [ ] Member view of own tasks completed
 - [ ] Admin view of all tasks completed
-- [ ] Admin filters implemented (by group and date)
+- [ ] Admin filters implemented (by Group, Date, and Member)
+- [ ] Admin Summary Widgets implemented (Total Tasks, Hours, Members)
 - [ ] Loading and empty states handled
 - [ ] `hours_spent` field captured and displayed
 

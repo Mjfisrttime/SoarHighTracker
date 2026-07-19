@@ -4,15 +4,30 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { formatDate, showToast } from '@/lib/utils';
 
+// Helper to extract numbers from time string (e.g., "2.5 hours" -> 2.5)
+function parseHours(timeStr) {
+  if (!timeStr) return 0;
+  const match = timeStr.match(/[\d.]+/);
+  if (match) {
+    const num = parseFloat(match[0]);
+    return isNaN(num) ? 0 : num;
+  }
+  return 0;
+}
+
 export default function TaskLogsPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Admin state
   const [adminGroups, setAdminGroups] = useState([]);
+  const [adminMembers, setAdminMembers] = useState([]);
   const [allAdminTasks, setAllAdminTasks] = useState([]);
+  
+  // Admin filters
   const [filterGroup, setFilterGroup] = useState('');
   const [filterDate, setFilterDate] = useState('');
+  const [filterMember, setFilterMember] = useState('');
 
   // Member state
   const [memberGroups, setMemberGroups] = useState([]);
@@ -39,7 +54,7 @@ export default function TaskLogsPage() {
     setCurrentUser(user);
 
     if (user.role === 'Admin') {
-      await Promise.all([fetchAdminGroups(), fetchAllAdminTasks()]);
+      await Promise.all([fetchAdminGroups(), fetchAdminMembers(), fetchAllAdminTasks()]);
     } else {
       await Promise.all([fetchMemberGroups(user.id), fetchMemberTasks(user.id)]);
     }
@@ -51,11 +66,16 @@ export default function TaskLogsPage() {
     const { data } = await supabase.from('groups').select('id, name').order('name');
     if (data) setAdminGroups(data);
   };
+  
+  const fetchAdminMembers = async () => {
+    const { data } = await supabase.from('users').select('id, name').order('name');
+    if (data) setAdminMembers(data);
+  };
 
   const fetchAllAdminTasks = async () => {
     const { data } = await supabase
       .from('task_logs')
-      .select('title, date, task_description, logged_at, group_id, hours_spent, users(name), groups(name)')
+      .select('user_id, title, date, task_description, logged_at, group_id, hours_spent, users(name), groups(name)')
       .order('logged_at', { ascending: false });
     if (data) setAllAdminTasks(data);
   };
@@ -100,19 +120,32 @@ export default function TaskLogsPage() {
 
   if (loading) return <div className="text-slate-500">Loading task logs...</div>;
 
+  // Filter Logic (Admin)
   const filteredTasks = allAdminTasks.filter(t => {
     if (filterGroup && t.group_id !== filterGroup) return false;
     if (filterDate && t.date !== filterDate) return false;
+    if (filterMember && t.user_id !== filterMember) return false;
     return true;
+  });
+
+  // Calculate Summaries (Admin)
+  let totalHours = 0;
+  const uniqueMembers = new Set();
+  
+  filteredTasks.forEach(t => {
+    totalHours += parseHours(t.hours_spent);
+    uniqueMembers.add(t.user_id);
   });
 
   // ADMIN VIEW
   if (currentUser?.role === 'Admin') {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-slate-800">Task Logs</h1>
+        <h1 className="text-3xl font-bold text-slate-800">Task Logbook</h1>
+        
+        {/* Filters */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-end">
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[180px]">
             <label className="block text-sm font-medium text-slate-700 mb-1">Filter by Group:</label>
             <select value={filterGroup} onChange={e => setFilterGroup(e.target.value)}
               className="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -120,17 +153,42 @@ export default function TaskLogsPage() {
               {adminGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
           </div>
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[180px]">
+            <label className="block text-sm font-medium text-slate-700 mb-1">Filter by Member:</label>
+            <select value={filterMember} onChange={e => setFilterMember(e.target.value)}
+              className="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">All Members</option>
+              {adminMembers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+          </div>
+          <div className="flex-1 min-w-[180px]">
             <label className="block text-sm font-medium text-slate-700 mb-1">Filter by Date:</label>
             <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)}
               className="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
-          <button onClick={() => { setFilterGroup(''); setFilterDate(''); }}
+          <button onClick={() => { setFilterGroup(''); setFilterMember(''); setFilterDate(''); }}
             className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-medium transition-colors border border-slate-300">
             Clear
           </button>
         </div>
 
+        {/* Dynamic Summary Widgets */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-sm p-6 text-white flex flex-col justify-center items-center">
+            <span className="text-sm font-medium text-indigo-100 uppercase tracking-wider mb-1">Total Tasks</span>
+            <span className="text-4xl font-bold">{filteredTasks.length}</span>
+          </div>
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-sm p-6 text-white flex flex-col justify-center items-center">
+            <span className="text-sm font-medium text-emerald-100 uppercase tracking-wider mb-1">Total Hours Logged</span>
+            <span className="text-4xl font-bold">{totalHours.toFixed(1).replace(/\.0$/, '')} <span className="text-xl font-medium">hrs</span></span>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-sm p-6 text-white flex flex-col justify-center items-center">
+            <span className="text-sm font-medium text-purple-100 uppercase tracking-wider mb-1">Active Members</span>
+            <span className="text-4xl font-bold">{uniqueMembers.size}</span>
+          </div>
+        </div>
+
+        {/* Logbook Table */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -153,7 +211,7 @@ export default function TaskLogsPage() {
                     <td className="p-4">{t.groups?.name || '-'}</td>
                     <td className="p-4">
                       <div className="font-semibold text-slate-800">{t.title}</div>
-                      <div className="text-xs text-slate-500 mt-1">Time: {t.hours_spent}</div>
+                      <div className="text-xs text-slate-500 mt-1">Time: <span className="font-medium">{t.hours_spent}</span></div>
                     </td>
                     <td className="p-4 text-sm text-slate-600">{t.task_description}</td>
                   </tr>
@@ -169,7 +227,7 @@ export default function TaskLogsPage() {
   // MEMBER VIEW
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-800">Task Logs</h1>
+      <h1 className="text-3xl font-bold text-slate-800">Task Tracker</h1>
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* Form */}
         <div className="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-sm border border-slate-200 sticky top-6">
@@ -199,7 +257,7 @@ export default function TaskLogsPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Time Spent *</label>
               <input type="text" required value={formData.hours_spent}
                 onChange={e => setFormData({ ...formData, hours_spent: e.target.value })}
-                placeholder='e.g. "2 hours"'
+                placeholder='e.g. "2 hours" or "1.5"'
                 className="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
             <div>
