@@ -42,15 +42,15 @@ No recent activities found.
 
 ---
 
-# 5. JavaScript
+# 5. Implementation
 
-Create/Update: `js/activity.js` or integrate into `dashboard.js`
+Create/Update: `app/dashboard/page.jsx`
 
 Responsibilities:
-- Fetch recent data from multiple tables
-- Normalize and sort data by date descending
-- Render HTML for feed items
-- Format timestamps relative to now
+- `loadActivityFeed` React hook function fetches recent data from `task_logs`, `attendance`, `groups`, and `group_members`
+- Combine, normalize, and sort data arrays by date descending
+- Render React elements for feed items
+- Format timestamps relative to now (e.g. "2 hrs ago")
 
 ---
 

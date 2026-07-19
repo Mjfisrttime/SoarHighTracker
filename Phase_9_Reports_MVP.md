@@ -41,14 +41,16 @@ Tables: `attendance`, `task_logs`, `users`, `groups`
 
 ---
 
-# 5. JavaScript
+# 5. Implementation
 
-Create: `js/reports.js`
+Create: `app/dashboard/reports/page.jsx`
 
 Responsibilities:
-- Handle filter form submissions.
-- Query Supabase with appropriate filters (eq, gte, lte).
-- Render results in a tabular format.
+- React hooks (`useState`, `useEffect`) for filter state and report data.
+- Handle filter form submissions via `onClick` event handler.
+- Query Supabase with appropriate filters (`eq`, `gte`, `lt`, `in`).
+- Render attendance grid (Members × Dates) or task list in a tabular format.
+- Role guard: only Admins can access the page.
 - (Optional) CSV Export functionality.
 
 ---

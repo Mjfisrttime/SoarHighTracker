@@ -162,8 +162,10 @@ id
 user_id
 group_id
 title
-description
-date_completed
+task_description
+date
+hours_spent
+logged_at
 ```
 
 ---

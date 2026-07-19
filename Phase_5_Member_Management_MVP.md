@@ -18,8 +18,7 @@ Admin can:
 
 Members can:
 
-- View the groups they belong to
-- View other members in the same group (optional)
+- View the groups they belong to (via Groups page)
 
 ---
 
@@ -53,15 +52,16 @@ Display all registered users.
 
 ---
 
-# 3. View Group Members
+# 3. Manage Group Assignments
 
-Display:
+Admin clicks "Manage Groups" on a user to open an assignment modal.
 
-- Member Name
-- Email
-- Joined Date
+The modal displays:
 
-Show all members assigned to the selected group.
+- Current groups the user belongs to (with Remove option)
+- A dropdown to assign the user to a new group
+
+This is a **user-centric flow** (select user → manage their groups), not a group-centric flow.
 
 ---
 
@@ -124,22 +124,22 @@ Operations:
 
 ---
 
-# 9. JavaScript
+# 9. Implementation
 
 Create:
 
-```
-js/members.js
+```text
+app/dashboard/members/page.jsx
 ```
 
 Responsibilities:
 
-- Load users
-- Load group members
-- Add member to group
-- Remove member from group
-- Search members
-- Validate inputs
+- React hooks (`useState`, `useEffect`) to load users and their assigned groups
+- Supabase queries to read users and manage `group_members`
+- Add member to group via assignment modal
+- Remove member from group via assignment modal
+- Search members by name or email
+- Handle unique constraint errors (prevent duplicate membership)
 
 ---
 
@@ -147,7 +147,7 @@ Responsibilities:
 
 ```text
 +------------------------------------------------------+
-| Members                                      [+ Add] |
+| Members                                              |
 +------------------------------------------------------+
 | Search Member...                               🔍    |
 +------------------------------------------------------+
@@ -155,8 +155,23 @@ Responsibilities:
 +------------------------------------------------------+
 | Name          Email               Role      Actions   |
 +------------------------------------------------------+
-| John Doe      john@email.com      Member   [Remove]  |
-| Mary Cruz     mary@email.com      Member   [Remove]  |
+| John Doe      john@email.com      Member   [Manage]  |
+| Mary Cruz     mary@email.com      Member   [Manage]  |
++------------------------------------------------------+
+
+--- Modal (on clicking Manage) ---
+
++------------------------------------------------------+
+| Manage Groups                                        |
+| For: John Doe                                        |
++------------------------------------------------------+
+| Current Groups:                                      |
+|   Web Dev Team                           [Remove]    |
+|   Design Team                            [Remove]    |
++------------------------------------------------------+
+| [Select a group... ▼]                       [Add]    |
++------------------------------------------------------+
+|                    [Close]                            |
 +------------------------------------------------------+
 ```
 
@@ -197,3 +212,4 @@ Do not implement yet:
 - Role management
 - Permissions management
 - Notifications
+- Members viewing other members in the same group (deferred to post-MVP)

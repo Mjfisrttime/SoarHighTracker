@@ -11,7 +11,7 @@ Build the main dashboard displayed after a user logs in. The dashboard should sh
 After a successful login:
 
 1. Check the logged-in user's role.
-2. Redirect to `dashboard.html`.
+2. Redirect to `/dashboard`.
 3. Load the appropriate dashboard data.
 
 - Admin → System Overview
@@ -128,6 +128,7 @@ Submitted Documentation
 - Attendance
 - Task Logs
 - Reports
+- Settings
 - Profile
 - Logout
 
@@ -137,6 +138,7 @@ Submitted Documentation
 - My Groups
 - Attendance
 - Task Logs
+- Settings
 - Profile
 - Logout
 
@@ -175,21 +177,20 @@ Submitted Documentation
 
 ---
 
-# 6. JavaScript
+# 6. Implementation
 
 Create:
 
 ```text
-js/dashboard.js
+app/dashboard/page.jsx
 ```
 
 Responsibilities:
 
-- Load dashboard statistics
-- Load recent activities
-- Display user information
-- Handle loading state
-- Handle empty state
+- React hooks (`useEffect`, `useState`) to load dashboard statistics based on role
+- Load recent activities (global for Admin, personal for Member)
+- Handle loading state with React conditionals
+- Handle empty state for activities
 
 ---
 

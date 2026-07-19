@@ -13,6 +13,7 @@ Develop the Task Log Module allowing **Members** to submit completed tasks and *
 - Title
 - Description
 - Completion Date
+- Time Spent (Hours)
 - Group (if part of multiple groups)
 
 ## Validation
@@ -37,7 +38,7 @@ Display tasks submitted by the logged-in member.
 Admin can view all tasks submitted by all members.
 Filters:
 - By Group
-- By Date Range
+- By Date
 
 ---
 
@@ -63,49 +64,67 @@ Loading tasks...
 
 Table: `task_logs`
 
+Columns used:
+- `user_id` – who submitted the task
+- `title` – task title
+- `task_description` – task details (optional)
+- `date` – completion date
+- `group_id` – associated group (optional)
+- `hours_spent` – time spent on task
+- `logged_at` – timestamp when the task was logged (auto-generated)
+
 Operations:
 - Insert (Member submits task)
 - Read (Member views own, Admin views all)
 
 ---
 
-# 7. JavaScript
+# 7. Implementation
 
-Create: `js/tasklogs.js`
+Create: `app/dashboard/task-logs/page.jsx`
 
 Responsibilities:
-- Handle task form submission
-- Validate inputs
-- Load task list (Admin vs Member views)
-- Handle filtering for Admin
+- React hooks (`useState`, `useEffect`) to handle task form submission and state
+- Supabase queries to insert and read `task_logs`
+- Validate inputs before submission
+- Role-based rendering (Admin vs Member views)
+- Handle state-based filtering for Admin
 
 ---
 
 # 8. Suggested Layout (Member)
 
 ```text
-+------------------------------------------------------+
-| Submit New Task                                      |
-| Title: [_____________________]                       |
-| Date:  [2023-10-25]                                  |
-| Desc:  [_____________________]                       |
-| [Submit Task]                                        |
-+------------------------------------------------------+
-| My Recent Tasks                                      |
-| - Setup Auth Module (Oct 25)                         |
-| - Created Database Schema (Oct 24)                   |
-+------------------------------------------------------+
++---------------------------+--------------------------------------+
+| Submit New Task           | My Recent Tasks                      |
+|                           |                                      |
+| Title: [____________]     | +----------------------------------+ |
+| Date:  [2023-10-25]      | | Setup Auth Module                | |
+| Group: [Select... ▼]     | | Web Dev Team · Oct 25 · 2 hours  | |
+| Time:  [2 hours]         | | Description text here...         | |
+| Desc:  [____________]    | +----------------------------------+ |
+|                           |                                      |
+| [Submit Task]             | +----------------------------------+ |
+|                           | | Created Database Schema          | |
+|                           | | Oct 24 · 1 hour                  | |
+|                           | | Description text here...         | |
+|                           | +----------------------------------+ |
++---------------------------+--------------------------------------+
 ```
+
+Layout: Form (1/3 width, left side) + Task feed (2/3 width, right side)
 
 ---
 
 # 9. Testing Checklist
 
 - Member can submit a task successfully.
-- Required fields are validated.
+- Required fields are validated (title min 3 chars, date required).
+- Completion date cannot be in the future.
 - Member sees their own tasks.
 - Admin can view tasks from all members.
-- Admin can filter tasks by group.
+- Admin can filter tasks by group and date.
+- `hours_spent` is displayed for each task.
 
 ---
 
@@ -114,5 +133,20 @@ Responsibilities:
 - [ ] Task submission form created and functional
 - [ ] Member view of own tasks completed
 - [ ] Admin view of all tasks completed
-- [ ] Admin filters implemented
+- [ ] Admin filters implemented (by group and date)
 - [ ] Loading and empty states handled
+- [ ] `hours_spent` field captured and displayed
+
+---
+
+# Out of Scope
+
+Do not implement yet:
+
+- Editing or deleting submitted tasks
+- File/image attachments on tasks
+- Task approval workflow
+- Task categories or tags
+- Date range filter for Admin (currently single-date)
+- Task reports (covered in Phase 9)
+- Notifications on task submission

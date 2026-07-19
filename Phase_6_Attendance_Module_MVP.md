@@ -55,22 +55,25 @@ Saving attendance...
 
 Table: `attendance`
 
+Columns used: `group_id`, `user_id`, `date`, `status`
+
+Note: The `remarks` column (defined in Phase 1 schema) is deferred to post-MVP.
+
 Operations:
 - Read group members for a specific date
-- Insert/Update attendance records (Upsert based on group, user, and date)
+- Insert/Update attendance records (Upsert with conflict on `user_id`, `group_id`, `date`)
 
 ---
 
-# 6. JavaScript
+# 6. Implementation
 
-Create: `js/attendance.js`
+Create: `app/dashboard/attendance/page.jsx`
 
 Responsibilities:
-- Load admin groups for the dropdown
-- Load members for the selected group
-- Handle date selection
-- Submit attendance payload to Supabase
-- Load member's personal attendance summary
+- React hooks (`useState`, `useEffect`) to manage groups, selected date, and members
+- Supabase bulk upsert to save attendance payload
+- Calculate and display member's personal attendance summary (Present/Absent/Late counts)
+- Role-based rendering (Admin vs Member views)
 
 ---
 
@@ -95,15 +98,29 @@ Responsibilities:
 
 - Admin can select a group and date.
 - Admin can submit attendance for multiple users at once.
-- Prevent marking attendance for future dates.
+- Prevent marking attendance for future dates (HTML + JS validation).
 - Member can view their attendance summary.
+- Attendance records include `group_id` to support users in multiple groups.
 
 ---
 
 # Definition of Done
 
 - [ ] Admin attendance UI completed
+- [ ] Attendance records include `group_id`
 - [ ] Attendance can be successfully saved to Supabase
 - [ ] Member attendance summary UI completed
 - [ ] Validation prevents future dates
 - [ ] Loading and empty states handled
+
+---
+
+# Out of Scope
+
+Do not implement yet:
+
+- Remarks/notes per attendance record
+- Editing attendance after save
+- Bulk export of attendance data
+- Attendance notifications
+- Attendance reports (covered in Phase 9)

@@ -128,22 +128,21 @@ Operations:
 
 ---
 
-# 10. JavaScript
+# 10. Implementation
 
 Create:
 
-```
-js/groups.js
+```text
+app/dashboard/groups/page.jsx
 ```
 
 Responsibilities:
 
-- Load groups
-- Create group
-- Update group
-- Delete group
-- Search groups
-- Validate input
+- React hooks (`useState`, `useEffect`) to load groups
+- Supabase queries for CRUD (Create, Read, Update, Delete)
+- Search groups state filtering
+- Validate input before submission
+- Role-based rendering (Admin vs Member views)
 
 ---
 
