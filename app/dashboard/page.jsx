@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
+import { showToast } from '@/lib/utils'; // Added for toast notifications
 
 function timeAgo(date) {
   const seconds = Math.floor((new Date() - date) / 1000);
@@ -25,6 +26,10 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({});
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // New state for self-check-in
+  const [activeSessions, setActiveSessions] = useState([]);
+  const [checkingIn, setCheckingIn] = useState(false);
 
   useEffect(() => {
     loadDashboard();
@@ -69,10 +74,68 @@ export default function DashboardPage() {
         myAttendance: myAttendance.count || 0,
         myTasks: myTasks.count || 0,
       });
+      
+      await loadActiveSessions(currentUser, todayDate);
     }
 
     await loadActivityFeed(currentUser);
     setLoading(false);
+  };
+
+  const loadActiveSessions = async (currentUser, todayDate) => {
+    const { data: myGroups } = await supabase.from('group_members').select('group_id, groups(name)').eq('user_id', currentUser.id);
+    if (!myGroups || myGroups.length === 0) return;
+    
+    const groupIds = myGroups.map(g => g.group_id);
+    const groupNames = {};
+    myGroups.forEach(g => groupNames[g.group_id] = g.groups.name);
+
+    const { data: openSessions } = await supabase
+      .from('attendance_sessions')
+      .select('*')
+      .eq('date', todayDate)
+      .eq('status', 'open')
+      .in('group_id', groupIds);
+      
+    if (!openSessions || openSessions.length === 0) return;
+
+    const sessionGroupIds = openSessions.map(s => s.group_id);
+    const { data: myAttendance } = await supabase
+      .from('attendance')
+      .select('group_id')
+      .eq('user_id', currentUser.id)
+      .eq('date', todayDate)
+      .in('group_id', sessionGroupIds);
+
+    const checkedInGroupIds = myAttendance ? myAttendance.map(a => a.group_id) : [];
+    
+    const pendingSessions = openSessions
+      .filter(s => !checkedInGroupIds.includes(s.group_id))
+      .map(s => ({ ...s, group_name: groupNames[s.group_id] }));
+      
+    setActiveSessions(pendingSessions);
+  };
+
+  const handleCheckIn = async (session) => {
+    setCheckingIn(true);
+    try {
+      const { error } = await supabase.from('attendance').insert([{
+        user_id: user.id,
+        group_id: session.group_id,
+        date: session.date,
+        status: 'Present'
+      }]);
+      if (error) throw error;
+      showToast('Checked in successfully!', 'success');
+      setActiveSessions(prev => prev.filter(s => s.id !== session.id));
+      
+      // Refresh stats
+      setStats(prev => ({ ...prev, myAttendance: prev.myAttendance + 1 }));
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setCheckingIn(false);
+    }
   };
 
   const loadActivityFeed = async (currentUser) => {
@@ -158,6 +221,22 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-slate-800">Dashboard</h1>
 
+      {/* Check-In Banners for Members */}
+      {user?.role !== 'Admin' && activeSessions.map(session => (
+        <div key={session.id} className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-md p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-white">
+          <div>
+            <h2 className="text-xl font-bold mb-1">Active Check-In Session</h2>
+            <p className="text-indigo-100">Your group <strong>"{session.group_name}"</strong> has an open attendance session right now.</p>
+          </div>
+          <button 
+            onClick={() => handleCheckIn(session)} 
+            disabled={checkingIn}
+            className="whitespace-nowrap bg-white text-indigo-700 hover:bg-indigo-50 px-6 py-3 rounded-xl font-bold shadow-sm transition-colors disabled:opacity-50">
+            {checkingIn ? '...' : 'Check In Now'}
+          </button>
+        </div>
+      ))}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {user?.role === 'Admin' ? (
@@ -181,7 +260,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Link href="/dashboard/groups" className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-3 px-4 rounded-xl text-center transition-colors shadow-sm border border-indigo-100">Create Group</Link>
           <Link href="/dashboard/members" className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold py-3 px-4 rounded-xl text-center transition-colors shadow-sm border border-emerald-100">Manage Members</Link>
-          <Link href="/dashboard/attendance" className="bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold py-3 px-4 rounded-xl text-center transition-colors shadow-sm border border-amber-100">Record Attendance</Link>
+          <Link href="/dashboard/attendance" className="bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold py-3 px-4 rounded-xl text-center transition-colors shadow-sm border border-amber-100">Manage Attendance</Link>
           <Link href="/dashboard/reports" className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold py-3 px-4 rounded-xl text-center transition-colors shadow-sm border border-rose-100">View Reports</Link>
         </div>
       )}

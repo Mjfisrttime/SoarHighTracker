@@ -2,125 +2,91 @@
 
 ## Objective
 
-Develop the Attendance Module allowing **Admins** to record attendance for group members on specific dates, and allowing **Members** to view their own attendance summary.
+Develop the Attendance Module using a **Self-Check-In** workflow. **Admins** open attendance sessions for groups, and **Members** check themselves in from their dashboard.
 
 ---
 
-# 1. Admin Attendance View
+# 1. Admin Attendance View (Session Management)
 
 ## Workflow
 
-1. Select a Group
-2. Select a Date (default: Today)
-3. View list of members in the selected group
-4. Mark status for each member (Present, Absent, Late)
-5. Save records
+1. Select a Group and Date (default: Today)
+2. Click **"Open Check-In Session"**.
+3. View a live list of members in the selected group, showing who has checked in (Present) and who is pending.
+4. **Auto-Close:** The session stays open until midnight. Once the date changes, members can no longer see or check into the session.
+5. **Lazy Update:** The next time the Admin views that past session, the system automatically marks any remaining pending members as "Absent".
+6. Admins can manually override a member's status (Present/Absent/Late) at any time by clicking their status badge.
 
 ### Validation
-- Group must be selected.
-- Date cannot be in the future.
+- Only one open session per group per date.
+- Sessions can only be opened for **Today's** date (preventing future/past errors).
 
 ---
 
 # 2. Member Attendance View
 
-Members can view a summary of their attendance:
-- Total Days Present
-- Total Days Absent
-- Total Days Late
-- Recent Attendance Records
+## Workflow
+
+1. Member logs into their Dashboard.
+2. If there is an `Open` session for any of their groups, a banner/widget appears.
+3. Member clicks **"Check In Now"**.
+4. They are instantly marked "Present" and the banner disappears.
+
+Members can also view their historical attendance summary (Present/Absent/Late counts and recent records) on their own Attendance page.
 
 ---
 
-# 3. Empty State
+# 3. Database Operations
 
-If no group is selected or group has no members:
-```text
-Select a group to record attendance.
-Or: No members found in this group.
-```
-
----
-
-# 4. Loading State
-
-```text
-Loading member list...
-Saving attendance...
-```
-
----
-
-# 5. Database Operations
-
-Table: `attendance`
-
-Columns used: `group_id`, `user_id`, `date`, `status`
-
-Note: The `remarks` column (defined in Phase 1 schema) is deferred to post-MVP.
-
+## Table: `attendance_sessions` [NEW]
+Columns used: `id`, `group_id`, `date`, `status` ('open' or 'closed')
 Operations:
-- Read group members for a specific date
-- Insert/Update attendance records (Upsert with conflict on `user_id`, `group_id`, `date`)
+- Create (Admin opens session for today)
+- Update (System automatically sets to 'closed' on Lazy Update for past sessions)
+- Read (Member checks for open sessions today)
+
+## Table: `attendance`
+Columns used: `group_id`, `user_id`, `date`, `status`
+Operations:
+- Insert/Update (Member self-checks-in as Present, Admin bulk marks Absents on close)
 
 ---
 
-# 6. Implementation
-
-Create: `app/dashboard/attendance/page.jsx`
-
-Responsibilities:
-- React hooks (`useState`, `useEffect`) to manage groups, selected date, and members
-- Supabase bulk upsert to save attendance payload
-- Calculate and display member's personal attendance summary (Present/Absent/Late counts)
-- Role-based rendering (Admin vs Member views)
-
----
-
-# 7. Suggested Layout (Admin)
+# 4. Suggested Layout (Admin)
 
 ```text
 +------------------------------------------------------+
-| Record Attendance                                    |
+| Manage Attendance                                    |
 | Group: [Web Dev Team ▼]   Date: [2023-10-25 ▼]       |
 +------------------------------------------------------+
-| Name          Status                                 |
-| John Doe      (•) Present  ( ) Absent  ( ) Late      |
-| Mary Cruz     ( ) Present  (•) Absent  ( ) Late      |
+| Status: OPEN (Closes at Midnight)                    |
 +------------------------------------------------------+
-|                                     [Save Records]   |
+| Member          Status                               |
+| John Doe        ✅ Present                            |
+| Mary Cruz       ⏳ Pending                            |
 +------------------------------------------------------+
 ```
 
 ---
 
-# 8. Testing Checklist
+# 5. Definition of Done
 
-- Admin can select a group and date.
-- Admin can submit attendance for multiple users at once.
-- Prevent marking attendance for future dates (HTML + JS validation).
-- Member can view their attendance summary.
-- Attendance records include `group_id` to support users in multiple groups.
-
----
-
-# Definition of Done
-
-- [ ] Admin attendance UI completed
-- [ ] Attendance records include `group_id`
-- [ ] Attendance can be successfully saved to Supabase
-- [ ] Member attendance summary UI completed
-- [ ] Validation prevents future dates
+- [ ] Admin can open attendance sessions for today
+- [ ] Member sees check-in button on Dashboard if session is open today
+- [ ] Member can click check-in to mark themselves Present
+- [ ] System auto-hides session at midnight
+- [ ] Lazy Update marks remaining members as Absent when admin views past sessions
+- [ ] Validation strictly allows opening sessions for 'Today' only
 - [ ] Loading and empty states handled
 
 ---
 
-# Out of Scope
+# 6. Out of Scope
 
 Do not implement yet:
 
+- Passcode or QR code verification
+- Automatic timed closing of sessions
+- Editing attendance history after session close
 - Remarks/notes per attendance record
-- Editing attendance after save
 - Bulk export of attendance data
-- Attendance notifications
-- Attendance reports (covered in Phase 9)

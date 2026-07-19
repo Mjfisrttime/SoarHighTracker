@@ -14,7 +14,8 @@ export default function AttendancePage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [members, setMembers] = useState([]);
   const [statusMap, setStatusMap] = useState({});
-  const [savingAttendance, setSavingAttendance] = useState(false);
+  const [sessionData, setSessionData] = useState(null); // { id, status, date }
+  const [processing, setProcessing] = useState(false);
 
   // Member state
   const [myRecords, setMyRecords] = useState([]);
@@ -45,16 +46,36 @@ export default function AttendancePage() {
     if (data) setGroups(data);
   };
 
-  const loadMembersForAttendance = async (groupId, date) => {
-    if (!groupId || !date) { setMembers([]); return; }
+  const loadAttendanceData = async (groupId, date) => {
+    if (!groupId || !date) { 
+      setMembers([]); 
+      setSessionData(null);
+      return; 
+    }
 
-    const { data: memberData, error } = await supabase
+    // 1. Check for session
+    const { data: sessionInfo } = await supabase
+      .from('attendance_sessions')
+      .select('id, status, date')
+      .eq('group_id', groupId)
+      .eq('date', date)
+      .maybeSingle();
+
+    // 2. Load group members
+    const { data: memberData } = await supabase
       .from('group_members')
       .select('user_id, users(name)')
       .eq('group_id', groupId);
-    if (error || !memberData || memberData.length === 0) { setMembers([]); return; }
+      
+    if (!memberData || memberData.length === 0) { 
+      setMembers([]);
+      setSessionData(sessionInfo || null);
+      return; 
+    }
 
     const userIds = memberData.map(m => m.user_id);
+    
+    // 3. Load actual attendance records
     const { data: existing } = await supabase
       .from('attendance')
       .select('user_id, status')
@@ -67,53 +88,100 @@ export default function AttendancePage() {
 
     const newStatusMap = {};
     memberData.forEach(m => {
-      newStatusMap[m.user_id] = existingMap[m.user_id] || 'Present';
+      newStatusMap[m.user_id] = existingMap[m.user_id] || 'Pending';
     });
 
+    // 4. Lazy Auto-Close Logic
+    // If we loaded a past session that is still 'open', we automatically close it
+    // and mark all pending members as Absent.
+    const today = new Date().toISOString().split('T')[0];
+    if (sessionInfo && sessionInfo.status === 'open' && sessionInfo.date < today) {
+      // Update session status in DB
+      await supabase.from('attendance_sessions').update({ status: 'closed' }).eq('id', sessionInfo.id);
+      
+      const absentRecords = memberData
+        .filter(m => newStatusMap[m.user_id] === 'Pending')
+        .map(m => ({
+          group_id: groupId,
+          user_id: m.user_id,
+          date: sessionInfo.date,
+          status: 'Absent'
+        }));
+
+      // Insert absents
+      if (absentRecords.length > 0) {
+        await supabase.from('attendance').upsert(absentRecords, { onConflict: 'user_id, group_id, date' });
+        
+        // Update local map
+        absentRecords.forEach(r => newStatusMap[r.user_id] = 'Absent');
+      }
+      
+      // Update local session state
+      sessionInfo.status = 'closed';
+    }
+
+    setSessionData(sessionInfo || null);
     setMembers(memberData);
     setStatusMap(newStatusMap);
   };
 
   const handleGroupChange = (groupId) => {
     setSelectedGroup(groupId);
-    loadMembersForAttendance(groupId, selectedDate);
+    loadAttendanceData(groupId, selectedDate);
   };
 
   const handleDateChange = (date) => {
     setSelectedDate(date);
-    loadMembersForAttendance(selectedGroup, date);
+    loadAttendanceData(selectedGroup, date);
   };
 
-  const setMemberStatus = (userId, status) => {
-    setStatusMap(prev => ({ ...prev, [userId]: status }));
-  };
-
-  const saveAttendance = async () => {
-    if (!selectedGroup || !selectedDate || members.length === 0) {
-      showToast('Nothing to save.', 'error');
-      return;
-    }
-    // JS-level future date validation
+  const openSession = async () => {
+    if (!selectedGroup || !selectedDate) return;
     const today = new Date().toISOString().split('T')[0];
-    if (selectedDate > today) {
-      showToast('Cannot record attendance for a future date.', 'error');
+    
+    if (selectedDate !== today) {
+      showToast('You can only open check-in sessions for Today.', 'error');
       return;
     }
-    setSavingAttendance(true);
+
+    setProcessing(true);
     try {
-      const records = members.map(m => ({
+      const { error } = await supabase.from('attendance_sessions').insert([{
         group_id: selectedGroup,
-        user_id: m.user_id,
         date: selectedDate,
-        status: statusMap[m.user_id] || 'Present',
-      }));
-      const { error } = await supabase.from('attendance').upsert(records, { onConflict: 'user_id, group_id, date' });
+        status: 'open'
+      }]);
       if (error) throw error;
-      showToast('Attendance saved!', 'success');
+      showToast('Session opened! It will auto-close at midnight.', 'success');
+      await loadAttendanceData(selectedGroup, selectedDate);
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
-      setSavingAttendance(false);
+      setProcessing(false);
+    }
+  };
+
+  const overrideStatus = async (userId, currentStatus) => {
+    if (!selectedGroup || !selectedDate) return;
+    
+    // Cycle status: Pending -> Present -> Absent -> Late -> Present
+    let newStatus = 'Present';
+    if (currentStatus === 'Present') newStatus = 'Absent';
+    else if (currentStatus === 'Absent') newStatus = 'Late';
+
+    try {
+      const { error } = await supabase.from('attendance').upsert([{
+        group_id: selectedGroup,
+        user_id: userId,
+        date: selectedDate,
+        status: newStatus
+      }], { onConflict: 'user_id, group_id, date' });
+      
+      if (error) throw error;
+      setStatusMap(prev => ({ ...prev, [userId]: newStatus }));
+      showToast('Status updated manually', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
     }
   };
 
@@ -143,7 +211,7 @@ export default function AttendancePage() {
   if (currentUser?.role !== 'Admin') {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-slate-800">My Attendance</h1>
+        <h1 className="text-3xl font-bold text-slate-800">My Attendance History</h1>
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
             <p className="text-2xl font-bold text-green-600">{stats.present}</p>
@@ -191,10 +259,13 @@ export default function AttendancePage() {
     );
   }
 
+  const today = new Date().toISOString().split('T')[0];
+  const canOpenSession = selectedDate === today && !sessionData;
+
   // ADMIN VIEW
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-800">Attendance</h1>
+      <h1 className="text-3xl font-bold text-slate-800">Manage Attendance</h1>
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-end">
         <div className="flex-1 min-w-[200px]">
@@ -207,60 +278,81 @@ export default function AttendancePage() {
         </div>
         <div className="flex-1 min-w-[200px]">
           <label className="block text-sm font-medium text-slate-700 mb-1">Date:</label>
-          <input type="date" value={selectedDate} max={new Date().toISOString().split('T')[0]}
+          <input type="date" value={selectedDate} max={today}
             onChange={e => handleDateChange(e.target.value)}
             className="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
-        <div>
-          <button onClick={saveAttendance} disabled={savingAttendance}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50">
-            {savingAttendance ? 'Saving...' : 'Save Records'}
-          </button>
-        </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-xs tracking-wider">
-              <th className="p-4 font-semibold">Member</th>
-              <th className="p-4 font-semibold">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200">
-            {members.length === 0 ? (
-              <tr><td colSpan="2" className="p-4 text-center text-slate-500">Select a group and date to view members.</td></tr>
-            ) : (
-              members.map(m => (
-                <tr key={m.user_id} className="hover:bg-slate-50">
-                  <td className="p-4 font-medium text-slate-800">{m.users?.name || 'Unknown'}</td>
-                  <td className="p-4">
-                    <div className="flex gap-4">
-                      {['Present', 'Absent', 'Late'].map(status => (
-                        <label key={status} className="flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="radio"
-                            name={`status_${m.user_id}`}
-                            value={status}
-                            checked={statusMap[m.user_id] === status}
-                            onChange={() => setMemberStatus(m.user_id, status)}
-                            className="accent-indigo-600"
-                          />
-                          <span className={`text-sm font-medium ${
-                            status === 'Present' ? 'text-green-600' :
-                            status === 'Absent' ? 'text-red-600' :
-                            'text-yellow-600'
-                          }`}>{status}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      {selectedGroup && selectedDate && (
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+            <div className="flex items-center gap-3">
+              <span className="font-semibold text-slate-700">Session Status:</span>
+              {!sessionData ? (
+                <span className="text-slate-500 font-medium">Not Started</span>
+              ) : sessionData.status === 'open' ? (
+                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                  OPEN (Closes at Midnight)
+                </span>
+              ) : (
+                <span className="bg-slate-200 text-slate-700 px-3 py-1 rounded-full text-sm font-bold">CLOSED</span>
+              )}
+            </div>
+            
+            <div>
+              {canOpenSession && (
+                <button onClick={openSession} disabled={processing}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium transition-colors disabled:opacity-50">
+                  {processing ? '...' : 'Open Check-In Session'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 text-slate-500 uppercase text-xs tracking-wider">
+                <th className="p-4 font-semibold">Member</th>
+                <th className="p-4 font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {members.length === 0 ? (
+                <tr><td colSpan="2" className="p-4 text-center text-slate-500">No members found in this group.</td></tr>
+              ) : (
+                members.map(m => {
+                  const status = statusMap[m.user_id];
+                  return (
+                    <tr key={m.user_id} className="hover:bg-slate-50">
+                      <td className="p-4 font-medium text-slate-800">{m.users?.name || 'Unknown'}</td>
+                      <td className="p-4">
+                        <button 
+                          onClick={() => overrideStatus(m.user_id, status)}
+                          title="Click to manually override status"
+                          className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${
+                            status === 'Present' ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' :
+                            status === 'Absent' ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100' :
+                            status === 'Late' ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' :
+                            'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
+                          }`}>
+                          {status === 'Pending' ? '⏳ Pending' : 
+                           status === 'Present' ? '✅ Present' : 
+                           status === 'Absent' ? '❌ Absent' : '⚠️ Late'}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+          <div className="p-3 bg-slate-50 text-xs text-slate-500 text-center border-t border-slate-200">
+            Click a member's status badge to manually override it.
+          </div>
+        </div>
+      )}
     </div>
   );
 }

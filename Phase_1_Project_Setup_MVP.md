@@ -144,6 +144,16 @@ user_id
 joined_at
 ```
 
+## attendance_sessions
+
+```text
+id
+group_id
+date
+status
+created_at
+```
+
 ## attendance
 
 ```text
