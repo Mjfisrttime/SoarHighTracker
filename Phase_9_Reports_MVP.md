@@ -11,16 +11,19 @@ Provide the **Admin** with tabular reports for Attendance and Tasks, allowing fo
 ## Features
 - Select Group (Required)
 - Select Month/Date Range
-- Displays grid: Members (Rows) x Dates (Columns) or a simple list view.
+- Displays grid: Members (Rows) x Session Dates (Columns).
+- **Summary Columns**: Total Present, Total Absent, Total Late, and Attendance Rate (%).
+- **Lazy Close Fix**: The report automatically calculates missing records for valid `attendance_sessions` as "Absent".
 
 ---
 
-# 2. Task Report
+# 2. Member Performance Report (Tasks)
 
 ## Features
-- Select Group
-- Select Member (Optional)
-- Displays list of tasks with completion dates.
+- Select Group (Required)
+- Select Month/Date Range
+- Displays aggregate summary table: Member Name | Total Tasks Completed | Total Hours Logged.
+- **Precision Time:** Parses time strings mathematically down to the second and formats them beautifully (e.g. "3h 45m 15s") for 100% accurate reporting.
 
 ---
 
@@ -36,7 +39,7 @@ No data found for the selected filters.
 
 # 4. Database Operations
 
-Tables: `attendance`, `task_logs`, `users`, `groups`
+Tables: `attendance`, `attendance_sessions`, `task_logs`, `users`, `groups`
 - Read with joined/filtered queries based on form inputs.
 
 ---
@@ -49,22 +52,22 @@ Responsibilities:
 - React hooks (`useState`, `useEffect`) for filter state and report data.
 - Handle filter form submissions via `onClick` event handler.
 - Query Supabase with appropriate filters (`eq`, `gte`, `lt`, `in`).
-- Render attendance grid (Members × Dates) or task list in a tabular format.
+- For Attendance: Fetch `attendance_sessions` first to establish the baseline dates, then map `attendance` records against it.
+- For Tasks: Group tasks by `user_id`, sum `hours_spent`, and count tasks.
+- Render clean analytic summary tables.
 - Role guard: only Admins can access the page.
 - (Optional) CSV Export functionality.
 
 ---
 
-# 6. Suggested Layout
-
 ```text
 +------------------------------------------------------+
-| Reports                                              |
-| Type: [Attendance ▼] Group: [Web Dev ▼]  [Generate]  |
+| Reports Analytics                                    |
+| Type: [Performance ▼] Group: [Web Dev ▼] [Generate]  |
 +------------------------------------------------------+
-| Member        | Oct 21 | Oct 22 | Oct 23 | Total     |
-| John Doe      |   P    |   P    |   A    |  2/3      |
-| Mary Cruz     |   P    |   L    |   P    |  3/3      |
+| Member        | Total Tasks | Total Hours            |
+| John Doe      |     15      |     40.5             |
+| Mary Cruz     |     12      |     32.0             |
 +------------------------------------------------------+
 ```
 

@@ -4,15 +4,28 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { formatDate, showToast } from '@/lib/utils';
 
-// Helper to extract numbers from time string (e.g., "2.5 hours" -> 2.5)
-function parseHours(timeStr) {
+// Time Tracking Helpers
+function parseTimeToSeconds(timeStr) {
   if (!timeStr) return 0;
-  const match = timeStr.match(/[\d.]+/);
-  if (match) {
-    const num = parseFloat(match[0]);
-    return isNaN(num) ? 0 : num;
-  }
-  return 0;
+  let h = 0, m = 0, s = 0;
+  const hMatch = timeStr.match(/(\d+)h/);
+  const mMatch = timeStr.match(/(\d+)m/);
+  const sMatch = timeStr.match(/(\d+)s/);
+  
+  if (hMatch) h = parseInt(hMatch[1], 10);
+  if (mMatch) m = parseInt(mMatch[1], 10);
+  if (sMatch) s = parseInt(sMatch[1], 10);
+  
+  return (h * 3600) + (m * 60) + s;
+}
+
+function formatSecondsToTime(totalSeconds) {
+  if (!totalSeconds) return "0h 0m 0s";
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  
+  return `${h}h ${m}m ${s}s`;
 }
 
 export default function TaskLogsPage() {
@@ -37,7 +50,9 @@ export default function TaskLogsPage() {
     title: '',
     date: new Date().toISOString().split('T')[0],
     group_id: '',
-    hours_spent: '',
+    hours: '',
+    minutes: '',
+    seconds: '',
     description: '',
   });
 
@@ -97,19 +112,29 @@ export default function TaskLogsPage() {
 
   const submitTask = async (e) => {
     e.preventDefault();
+    const h = parseInt(formData.hours || '0', 10);
+    const m = parseInt(formData.minutes || '0', 10);
+    const s = parseInt(formData.seconds || '0', 10);
+    
+    if (h === 0 && m === 0 && s === 0) {
+      showToast('Please enter the time spent on this task.', 'error');
+      return;
+    }
+
     setSubmitting(true);
     try {
+      const formattedTime = `${h}h ${m}m ${s}s`;
       const { error } = await supabase.from('task_logs').insert([{
         user_id: currentUser.id,
         title: formData.title.trim(),
         date: formData.date,
         group_id: formData.group_id || null,
-        hours_spent: formData.hours_spent.trim(),
+        hours_spent: formattedTime,
         task_description: formData.description.trim() || 'No description provided.',
       }]);
       if (error) throw error;
       showToast('Task submitted!', 'success');
-      setFormData({ title: '', date: new Date().toISOString().split('T')[0], group_id: '', hours_spent: '', description: '' });
+      setFormData({ title: '', date: new Date().toISOString().split('T')[0], group_id: '', hours: '', minutes: '', seconds: '', description: '' });
       await fetchMemberTasks(currentUser.id);
     } catch (err) {
       showToast(err.message, 'error');
@@ -129,11 +154,11 @@ export default function TaskLogsPage() {
   });
 
   // Calculate Summaries (Admin)
-  let totalHours = 0;
+  let totalSeconds = 0;
   const uniqueMembers = new Set();
   
   filteredTasks.forEach(t => {
-    totalHours += parseHours(t.hours_spent);
+    totalSeconds += parseTimeToSeconds(t.hours_spent);
     uniqueMembers.add(t.user_id);
   });
 
@@ -179,8 +204,8 @@ export default function TaskLogsPage() {
             <span className="text-4xl font-bold">{filteredTasks.length}</span>
           </div>
           <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-sm p-6 text-white flex flex-col justify-center items-center">
-            <span className="text-sm font-medium text-emerald-100 uppercase tracking-wider mb-1">Total Hours Logged</span>
-            <span className="text-4xl font-bold">{totalHours.toFixed(1).replace(/\.0$/, '')} <span className="text-xl font-medium">hrs</span></span>
+            <span className="text-sm font-medium text-emerald-100 uppercase tracking-wider mb-1">Total Time Logged</span>
+            <span className="text-3xl font-bold">{formatSecondsToTime(totalSeconds)}</span>
           </div>
           <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-sm p-6 text-white flex flex-col justify-center items-center">
             <span className="text-sm font-medium text-purple-100 uppercase tracking-wider mb-1">Active Members</span>
@@ -253,13 +278,37 @@ export default function TaskLogsPage() {
                 {memberGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Time Spent *</label>
-              <input type="text" required value={formData.hours_spent}
-                onChange={e => setFormData({ ...formData, hours_spent: e.target.value })}
-                placeholder='e.g. "2 hours" or "1.5"'
-                className="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <label className="block text-sm font-medium text-slate-700 mb-2">Time Spent *</label>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <div className="flex items-center border border-slate-300 rounded-lg bg-white overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">
+                    <input type="number" min="0" placeholder="0" value={formData.hours}
+                      onChange={e => setFormData({ ...formData, hours: e.target.value })}
+                      className="w-full p-2 outline-none text-center" />
+                    <span className="bg-slate-50 text-slate-500 text-xs px-2 py-3 font-medium border-l border-slate-200">h</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center border border-slate-300 rounded-lg bg-white overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">
+                    <input type="number" min="0" max="59" placeholder="0" value={formData.minutes}
+                      onChange={e => setFormData({ ...formData, minutes: e.target.value })}
+                      className="w-full p-2 outline-none text-center" />
+                    <span className="bg-slate-50 text-slate-500 text-xs px-2 py-3 font-medium border-l border-slate-200">m</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center border border-slate-300 rounded-lg bg-white overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500">
+                    <input type="number" min="0" max="59" placeholder="0" value={formData.seconds}
+                      onChange={e => setFormData({ ...formData, seconds: e.target.value })}
+                      className="w-full p-2 outline-none text-center" />
+                    <span className="bg-slate-50 text-slate-500 text-xs px-2 py-3 font-medium border-l border-slate-200">s</span>
+                  </div>
+                </div>
+              </div>
             </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
               <textarea rows="3" value={formData.description}
@@ -267,7 +316,7 @@ export default function TaskLogsPage() {
                 className="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
             </div>
             <button type="submit" disabled={submitting}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50">
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 mt-2">
               {submitting ? 'Submitting...' : 'Submit Task'}
             </button>
           </form>
@@ -293,7 +342,7 @@ export default function TaskLogsPage() {
                 </div>
                 <div className="text-sm text-slate-500 mb-3 flex gap-4">
                   <span>{formatDate(t.date)}</span>
-                  <span>Time: {t.hours_spent}</span>
+                  <span className="font-semibold text-indigo-600 px-2 py-0.5 bg-indigo-50 rounded">Time: {t.hours_spent}</span>
                 </div>
                 <p className="text-sm text-slate-700">{t.task_description}</p>
               </div>

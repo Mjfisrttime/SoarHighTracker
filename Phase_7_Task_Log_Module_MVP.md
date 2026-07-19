@@ -13,7 +13,7 @@ Develop the Task Log Module allowing **Members** to submit completed tasks and *
 - Title
 - Description
 - Completion Date
-- Time Spent (Hours)
+- **Time Spent:** Exact input for Hours, Minutes, and Seconds (stored as a formatted string like "2h 30m 15s")
 - Group (if part of multiple groups)
 
 ## Validation
